@@ -1,4 +1,44 @@
-# nerve_net
+# gobed - Go Word Embedding
+Creating your own word embeddings with Go!
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+# nerve_net.py
 Like its biological namesake this is a implementation of the simplest type of neural network, that being a feedforward network using backpropagation for learning.  This implementation uses only base python 3.10, no additional libraries required.
 
 ## Network Initialization
