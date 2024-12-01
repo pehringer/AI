@@ -110,6 +110,27 @@ func (p Parameters) NewGradients() Gradients {
 	return g
 }
 
+// Activation Formula:
+//
+//         n
+// z_j = sigma(w_ij * a_i) + b_j
+//         i=0
+//
+// a_j = f(z_j)
+//
+// Where:
+//
+// z_j  Sum of the j-th neuron in the current layer.
+//
+// w_ij Weight from the i-th neuron in the prior layer to the j-th neuron in the current layer.
+//
+// a_i  Activation of the i-th neuron in the prior layer.
+//
+// b_j  Bias of the j-th neuron in the current layer.
+//
+// a_j  Activation of the j-th neuron in the current layer.
+//
+// f  Activation function (ReLU or Softmax)
 func (c Cache) ComputeActivations(p Parameters, x []float32, a Activations) {
 	for i := 0; i < p.h; i++ {
 		vec.Multiply(x, p.hw[i], c.x)
@@ -131,6 +152,38 @@ func (a Activations) Outputs() []float32 {
 	return a.ya
 }
 
+// Output Layer Delta Formula:
+//
+// d_i = a_i  - t_i
+//
+// Where:
+//
+// d_i Delta of the i-th neuron in the current layer.
+//
+// a_i Activation of the i-th neuron in the current layer.
+//
+// t_i Expected activation of the i-th neuron in the current layer
+//
+// Hidden layer Delta Formula:
+//
+//         n
+// d_i = sigma(w_ij  * d_j) * f'(z_i)
+//        j=0
+//
+// Where:
+//
+// d_i  Delta of the i-th neuron in the current layer.
+//
+//
+// w_ij Weight from the i-th neuron in the current layer to the j-th neuron in next layer.
+//
+//
+// d_j  Delta of the j-th neuron in the next layer.
+//
+//
+// f'   Derivative of activation function (ReLU' or Softmax')
+//
+// z_i  Sum of the i-th neurons in the current layer.
 func (c Cache) ComputeDeltas(p Parameters, a Activations, t []float32, d Deltas) {
 	vec.Subtract(a.ya, t, d.yd)
 	vec.ReLUDerivative(a.hz, d.hd)
@@ -143,6 +196,27 @@ func (c Cache) ComputeDeltas(p Parameters, a Activations, t []float32, d Deltas)
 	vec.Multiply(d.hd, c.h, d.hd)
 }
 
+// Bias Gradient Formula:
+//
+// g_i = d_i
+//
+// Where:
+//
+// g_i Bias gradient of the i-th neuron in the current layer.
+//
+// d_i Delta of the i-th neuron in the current layer.
+//
+// Weight Gradient Formula:
+//
+// g_ij = d_j * a_i
+//
+// Where:
+//
+// g_ij weight gradient for the i-th neuron in the prior layer to the j-th neuron in the current layer.
+//
+// d_j  Delta of the j-th neuron in the current layer.
+//
+// a_i  Activation of the i-th neuron in the prior layer.
 func (c Cache) ComputeGradients(p Parameters, x []float32, a Activations, d Deltas, g Gradients) {
 	copy(g.hgb, d.hd)
 	for i := 0; i < p.h; i++ {
@@ -156,6 +230,17 @@ func (c Cache) ComputeGradients(p Parameters, x []float32, a Activations, d Delt
 	}
 }
 
+// Bias Update Formula:
+//
+// b_i = b_i - lr * g_i
+//
+// Where:
+//
+// b_i Bias of the i-th neuron in the current layer.
+//
+// lr  Learning rate.
+//
+// g_i Bias gradient of the i-th neuron in the current layer.
 func (c Cache) UpdateBiases(g Gradients, lr float32, p Parameters) {
 	vec.Duplicate(lr, c.h)
 	vec.Multiply(c.h, g.hgb, c.h)
@@ -165,6 +250,17 @@ func (c Cache) UpdateBiases(g Gradients, lr float32, p Parameters) {
 	vec.Subtract(p.yb, c.y, p.yb)
 }
 
+// Weight Update Formula:
+//
+// w_ij = w_ij - lr * g_ij
+//
+// Where:
+//
+// w_ij Weight from the i-th neuron in the prior layer to the j-th neuron in the current layer.
+//
+// lr   Learning rate.
+//
+// g_ij Weight gradient for the i-th neuron in the prior layer to the j-th neuron in the current layer.
 func (c Cache) UpdateWeights(g Gradients, lr float32, p Parameters) {
 	for i := 0; i < p.h; i++ {
 		vec.Duplicate(lr, c.x)
