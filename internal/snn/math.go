@@ -8,40 +8,40 @@ import (
 )
 
 type (
-	Parameters struct {
-		x  int
-		h  int
-		y  int
-		hb []float32
-		hw [][]float32
-		yb []float32
-		yw [][]float32
+	parameters struct {
+		x  int         // Input layer width.
+		h  int         // Hidden layer width.
+		y  int         // Output layer width.
+		hb []float32   // Hidden layer biases (size h).
+		hw [][]float32 // Hidden layer weights (size h by x).
+		yb []float32   // Output layer biases (size y).
+		yw [][]float32 // Output layer weigths (size y by h).
 	}
-	Cache struct {
+	cache struct {
 		x []float32
 		h []float32
 		y []float32
 	}
-	Activations struct {
-		ha []float32
-		hz []float32
-		ya []float32
-		yz []float32
+	activations struct {
+		ha []float32 // Hidden layer activations (size h).
+		hz []float32 // Hidden layer inputs (size h).
+		ya []float32 // Output layer activations (size y).
+		yz []float32 // Output layer inputs (size y).
 	}
-	Deltas struct {
-		hd []float32
-		yd []float32
+	deltas struct {
+		hd []float32 // Hidden layer error deltas (size h).
+		yd []float32 // Output layer error deltas (size y).
 	}
-	Gradients struct {
-		hgb []float32
-		hgw [][]float32
-		ygb []float32
-		ygw [][]float32
+	gradients struct {
+		hgb []float32   // Hidden layer bias gradients (size h).
+		hgw [][]float32 // Hidden layer weight gradients (size h by x).
+		ygb []float32   // Output layer bias gradients (size y).
+		ygw [][]float32 // Output layer weight gradients (size y by h).
 	}
 )
 
-func NewParameters(x, h, y int) Parameters {
-	p := Parameters{
+func newParameters(x, h, y int) parameters {
+	p := parameters{
 		x:  x,
 		h:  h,
 		y:  y,
@@ -67,8 +67,8 @@ func NewParameters(x, h, y int) Parameters {
 	return p
 }
 
-func (p Parameters) NewCache() Cache {
-	c := Cache{
+func (p parameters) newCache() cache {
+	c := cache{
 		x: make([]float32, p.x),
 		h: make([]float32, p.h),
 		y: make([]float32, p.y),
@@ -76,8 +76,8 @@ func (p Parameters) NewCache() Cache {
 	return c
 }
 
-func (p Parameters) NewActivations() Activations {
-	a := Activations{
+func (p parameters) newActivations() activations {
+	a := activations{
 		ha: make([]float32, p.h),
 		hz: make([]float32, p.h),
 		ya: make([]float32, p.y),
@@ -86,16 +86,16 @@ func (p Parameters) NewActivations() Activations {
 	return a
 }
 
-func (p Parameters) NewDeltas() Deltas {
-	d := Deltas{
+func (p parameters) newDeltas() deltas {
+	d := deltas{
 		hd: make([]float32, p.h),
 		yd: make([]float32, p.y),
 	}
 	return d
 }
 
-func (p Parameters) NewGradients() Gradients {
-	g := Gradients{
+func (p parameters) newGradients() gradients {
+	g := gradients{
 		hgb: make([]float32, p.h),
 		hgw: make([][]float32, p.h),
 		ygb: make([]float32, p.y),
@@ -112,9 +112,11 @@ func (p Parameters) NewGradients() Gradients {
 
 // Activation Formula:
 //
-//         n
+//	n
+//
 // z_j = sigma(w_ij * a_i) + b_j
-//         i=0
+//
+//	i=0
 //
 // a_j = f(z_j)
 //
@@ -131,7 +133,7 @@ func (p Parameters) NewGradients() Gradients {
 // a_j  Activation of the j-th neuron in the current layer.
 //
 // f  Activation function (ReLU or Softmax)
-func (c Cache) ComputeActivations(p Parameters, x []float32, a Activations) {
+func (c cache) computeActivations(p parameters, x []float32, a activations) {
 	for i := 0; i < p.h; i++ {
 		vec.Multiply(x, p.hw[i], c.x)
 		vec.Summation(c.x)
@@ -148,10 +150,6 @@ func (c Cache) ComputeActivations(p Parameters, x []float32, a Activations) {
 	vec.Softmax(a.yz, a.ya)
 }
 
-func (a Activations) Outputs() []float32 {
-	return a.ya
-}
-
 // Output Layer Delta Formula:
 //
 // d_i = a_i  - t_i
@@ -166,25 +164,24 @@ func (a Activations) Outputs() []float32 {
 //
 // Hidden layer Delta Formula:
 //
-//         n
+//	n
+//
 // d_i = sigma(w_ij  * d_j) * f'(z_i)
-//        j=0
+//
+//	j=0
 //
 // Where:
 //
 // d_i  Delta of the i-th neuron in the current layer.
 //
-//
 // w_ij Weight from the i-th neuron in the current layer to the j-th neuron in next layer.
 //
-//
 // d_j  Delta of the j-th neuron in the next layer.
-//
 //
 // f'   Derivative of activation function (ReLU' or Softmax')
 //
 // z_i  Sum of the i-th neurons in the current layer.
-func (c Cache) ComputeDeltas(p Parameters, a Activations, t []float32, d Deltas) {
+func (c cache) computeDeltas(p parameters, a activations, t []float32, d deltas) {
 	vec.Subtract(a.ya, t, d.yd)
 	vec.ReLUDerivative(a.hz, d.hd)
 	for i := 0; i < p.h; i++ {
@@ -217,7 +214,7 @@ func (c Cache) ComputeDeltas(p Parameters, a Activations, t []float32, d Deltas)
 // d_j  Delta of the j-th neuron in the current layer.
 //
 // a_i  Activation of the i-th neuron in the prior layer.
-func (c Cache) ComputeGradients(p Parameters, x []float32, a Activations, d Deltas, g Gradients) {
+func (c cache) computeGradients(p parameters, x []float32, a activations, d deltas, g gradients) {
 	copy(g.hgb, d.hd)
 	for i := 0; i < p.h; i++ {
 		vec.Duplicate(d.hd[i], c.x)
@@ -241,7 +238,7 @@ func (c Cache) ComputeGradients(p Parameters, x []float32, a Activations, d Delt
 // lr  Learning rate.
 //
 // g_i Bias gradient of the i-th neuron in the current layer.
-func (c Cache) UpdateBiases(g Gradients, lr float32, p Parameters) {
+func (c cache) updateBiases(g gradients, lr float32, p parameters) {
 	vec.Duplicate(lr, c.h)
 	vec.Multiply(c.h, g.hgb, c.h)
 	vec.Subtract(p.hb, c.h, p.hb)
@@ -261,7 +258,7 @@ func (c Cache) UpdateBiases(g Gradients, lr float32, p Parameters) {
 // lr   Learning rate.
 //
 // g_ij Weight gradient for the i-th neuron in the prior layer to the j-th neuron in the current layer.
-func (c Cache) UpdateWeights(g Gradients, lr float32, p Parameters) {
+func (c cache) updateWeights(g gradients, lr float32, p parameters) {
 	for i := 0; i < p.h; i++ {
 		vec.Duplicate(lr, c.x)
 		vec.Multiply(c.x, g.hgw[i], c.x)

@@ -6,45 +6,68 @@ import (
 	"github.com/pehringer/gobed/internal/snn"
 )
 
-func main() {
-	/*
-		and := [][][]float32{
-			{{0.0, 0.0}, {0.0, 1.0}},
-			{{0.0, 1.0}, {0.0, 1.0}},
-			{{1.0, 0.0}, {0.0, 1.0}},
-			{{1.0, 1.0}, {1.0, 0.0}},
-		}
-		oor := [][][]float32{
-			{{0.0, 0.0}, {0.0, 1.0}},
-			{{0.0, 1.0}, {1.0, 0.0}},
-			{{1.0, 0.0}, {1.0, 0.0}},
-			{{1.0, 1.0}, {1.0, 0.0}},
-		}
-	*/
-	xor := [][][]float32{
-		{{0.0, 0.0}, {0.0, 1.0}},
-		{{0.0, 1.0}, {1.0, 0.0}},
-		{{1.0, 0.0}, {1.0, 0.0}},
-		{{1.0, 1.0}, {0.0, 1.0}},
+var (
+	or = snn.TrainingSet{
+		{
+			Features: []float32{0.0, 0.0},
+			Targets:  []float32{0.0, 1.0},
+		},
+		{
+			Features: []float32{0.0, 1.0},
+			Targets:  []float32{1.0, 0.0},
+		},
+		{
+			Features: []float32{1.0, 0.0},
+			Targets:  []float32{1.0, 0.0},
+		},
+		{
+			Features: []float32{1.0, 1.0},
+			Targets:  []float32{1.0, 0.0},
+		},
 	}
-	t := xor
-	p := snn.NewParameters(2, 4, 2)
-	c := p.NewCache()
-	a := p.NewActivations()
-	d := p.NewDeltas()
-	g := p.NewGradients()
-	for i := 0; i < 4096; i++ {
-		for _, e := range t {
-			c.ComputeActivations(p, e[0], a)
-			c.ComputeDeltas(p, a, e[1], d)
-			c.ComputeGradients(p, e[0], a, d, g)
-			c.UpdateBiases(g, 0.05, p)
-			c.UpdateWeights(g, 0.05, p)
-		}
-		for _, e := range t {
-			c.ComputeActivations(p, e[0], a)
-			fmt.Println(e[0], e[1], a.Outputs())
-		}
-		fmt.Println()
+	nor = snn.TrainingSet{
+		{
+			Features: []float32{0.0, 0.0},
+			Targets:  []float32{1.0, 0.0},
+		},
+		{
+			Features: []float32{0.0, 1.0},
+			Targets:  []float32{0.0, 1.0},
+		},
+		{
+			Features: []float32{1.0, 0.0},
+			Targets:  []float32{0.0, 1.0},
+		},
+		{
+			Features: []float32{1.0, 1.0},
+			Targets:  []float32{0.0, 1.0},
+		},
+	}
+	xor = snn.TrainingSet{
+		{
+			Features: []float32{0.0, 0.0},
+			Targets:  []float32{0.0, 1.0},
+		},
+		{
+			Features: []float32{0.0, 1.0},
+			Targets:  []float32{1.0, 0.0},
+		},
+		{
+			Features: []float32{1.0, 0.0},
+			Targets:  []float32{1.0, 0.0},
+		},
+		{
+			Features: []float32{1.0, 1.0},
+			Targets:  []float32{0.0, 1.0},
+		},
+	}
+)
+
+func main() {
+	ts := xor
+	n := snn.NewNeuralNetwork(2, 4, 2)
+	n.OnlineTrain(ts, 4096, 0.05)
+	for i := 0; i < len(ts); i++ {
+		fmt.Println(ts[i].Features, ts[i].Targets, n.Prediction(ts[i].Features))
 	}
 }
