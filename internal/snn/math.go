@@ -112,11 +112,9 @@ func (p parameters) newGradients() gradients {
 
 // Activation Formula:
 //
-//	n
-//
+//	   n
 // z_j = sigma(w_ij * a_i) + b_j
-//
-//	i=0
+//	  i=0
 //
 // a_j = f(z_j)
 //
@@ -164,11 +162,9 @@ func (c cache) computeActivations(p parameters, x []float32, a activations) {
 //
 // Hidden layer Delta Formula:
 //
-//	n
-//
+//	   n
 // d_i = sigma(w_ij  * d_j) * f'(z_i)
-//
-//	j=0
+//	  j=0
 //
 // Where:
 //
