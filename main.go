@@ -64,9 +64,10 @@ var (
 )
 
 func main() {
-	ts := xor
+	ts := or
 	n := snn.NewNeuralNetwork(2, 4, 2)
-	n.OnlineTrain(ts, 4096, 0.05)
+	//n.OnlineTrain(ts, 4096, 0.05)
+	n.BatchTrain(ts, 8192, 3, 0.05)
 	for i := 0; i < len(ts); i++ {
 		fmt.Println(ts[i].Features, ts[i].Targets, n.Prediction(ts[i].Features))
 	}

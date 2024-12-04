@@ -223,6 +223,33 @@ func (c cache) computeGradients(p parameters, x []float32, a activations, d delt
 	}
 }
 
+func (c cache) averageGradients(p parameters, g []gradients) {
+	for i := 1; i < len(g); i++ {
+		vec.Add(g[0].hgb, g[i].hgb, g[0].hgb)
+	}
+	vec.Duplicate(float32(len(g)), c.h)
+	vec.Divide(g[0].hgb, c.h, g[0].hgb)
+	for i := 0; i < p.h; i++ {
+		for j := 1; j < len(g); j++ {
+			vec.Add(g[0].hgw[i], g[j].hgw[i], g[0].hgw[i])
+		}
+		vec.Duplicate(float32(len(g)), c.x)
+		vec.Divide(g[0].hgw[i], c.x, g[0].hgw[i])
+	}
+	for i := 1; i < len(g); i++ {
+		vec.Add(g[0].ygb, g[i].ygb, g[0].ygb)
+	}
+	vec.Duplicate(float32(len(g)), c.y)
+	vec.Divide(g[0].ygb, c.y, g[0].ygb)
+	for i := 0; i < p.y; i++ {
+		for j := 1; j < len(g); j++ {
+			vec.Add(g[0].ygw[i], g[j].ygw[i], g[0].ygw[i])
+		}
+		vec.Duplicate(float32(len(g)), c.h)
+		vec.Divide(g[0].ygw[i], c.h, g[0].ygw[i])
+	}
+}
+
 // Bias Update Formula:
 //
 // b_i = b_i - lr * g_i

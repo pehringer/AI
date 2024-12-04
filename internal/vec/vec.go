@@ -10,6 +10,10 @@ func Add(leftOperands, rightOperands, results []float32) {
 	simd.AddFloat32(leftOperands, rightOperands, results)
 }
 
+func Divide(leftOperands, rightOperands, results []float32) {
+	simd.DivFloat32(leftOperands, rightOperands, results)
+}
+
 func Duplicate(operand float32, results []float32) {
 	n := len(results)
 	for i := 0; i < n; i++ {

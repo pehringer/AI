@@ -1,5 +1,9 @@
 package snn
 
+import (
+	"runtime"
+)
+
 type (
 	SampleData struct {
 		Features []float32
@@ -41,5 +45,37 @@ func (n NeuralNetwork) OnlineTrain(data TrainingSet, epochs int, learningRate fl
 }
 
 func (n NeuralNetwork) BatchTrain(data TrainingSet, epochs, batchSize int, learningRate float32) {
-	// TODO
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	c := make([]cache, batchSize)
+	for i := range c {
+		c[i] = n.parameters.newCache()
+	}
+	a := make([]activations, batchSize)
+	for i := range a {
+		a[i] = n.parameters.newActivations()
+	}
+	d := make([]deltas, batchSize)
+	for i := range d {
+		d[i] = n.parameters.newDeltas()
+	}
+	g := make([]gradients, batchSize)
+	for i := range d {
+		g[i] = n.parameters.newGradients()
+	}
+	i := 0
+	batches := len(data) / batchSize
+	for e := 0; e < epochs; e++ {
+		for b := 0; b < batches; b++ {
+			for r := 0; r < batchSize; r++ {
+				c[r].computeActivations(n.parameters, data[i].Features, a[r])
+				c[r].computeDeltas(n.parameters, a[r], data[i].Targets, d[r])
+				c[r].computeGradients(n.parameters, data[i].Features, a[r], d[r], g[r])
+				i += 1
+				i %= len(data)
+			}
+			c[0].averageGradients(n.parameters, g)
+			c[0].updateBiases(g[0], learningRate, n.parameters)
+			c[0].updateWeights(g[0], learningRate, n.parameters)
+		}
+	}
 }
