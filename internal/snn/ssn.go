@@ -2,6 +2,7 @@ package snn
 
 import (
 	"runtime"
+	"sync"
 )
 
 type (
@@ -62,17 +63,23 @@ func (n NeuralNetwork) BatchTrain(data TrainingSet, epochs, batchSize int, learn
 	for i := range d {
 		g[i] = n.parameters.newGradients()
 	}
-	i := 0
+	sampleIndex := 0
 	batches := len(data) / batchSize
-	for e := 0; e < epochs; e++ {
-		for b := 0; b < batches; b++ {
-			for r := 0; r < batchSize; r++ {
-				c[r].computeActivations(n.parameters, data[i].Features, a[r])
-				c[r].computeDeltas(n.parameters, a[r], data[i].Targets, d[r])
-				c[r].computeGradients(n.parameters, data[i].Features, a[r], d[r], g[r])
-				i += 1
-				i %= len(data)
+	for epoch := 0; epoch < epochs; epoch++ {
+		for batch := 0; batch < batches; batch++ {
+			samples := sync.WaitGroup{}
+			for batchIndex := 0; batchIndex < batchSize; batchIndex++ {
+				samples.Add(1)
+				go func(batchIndex, sampleIndex int) {
+					defer samples.Done()
+					c[batchIndex].computeActivations(n.parameters, data[sampleIndex].Features, a[batchIndex])
+					c[batchIndex].computeDeltas(n.parameters, a[batchIndex], data[sampleIndex].Targets, d[batchIndex])
+					c[batchIndex].computeGradients(n.parameters, data[sampleIndex].Features, a[batchIndex], d[batchIndex], g[batchIndex])
+				}(batchIndex, sampleIndex)
+				sampleIndex += 1
+				sampleIndex %= len(data)
 			}
+			samples.Wait()
 			c[0].averageGradients(n.parameters, g)
 			c[0].updateBiases(g[0], learningRate, n.parameters)
 			c[0].updateWeights(g[0], learningRate, n.parameters)
