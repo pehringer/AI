@@ -1,4 +1,4 @@
-package vec
+package snn
 
 import (
 	"math"
@@ -6,26 +6,26 @@ import (
 	"github.com/pehringer/simd"
 )
 
-func Add(leftOperands, rightOperands, results []float32) {
+func add(leftOperands, rightOperands, results []float32) {
 	simd.AddFloat32(leftOperands, rightOperands, results)
 }
 
-func Divide(leftOperands, rightOperands, results []float32) {
+func divide(leftOperands, rightOperands, results []float32) {
 	simd.DivFloat32(leftOperands, rightOperands, results)
 }
 
-func Duplicate(operand float32, results []float32) {
+func duplicate(operand float32, results []float32) {
 	n := len(results)
 	for i := 0; i < n; i++ {
 		results[i] = operand
 	}
 }
 
-func Multiply(leftOperands, rightOperands, results []float32) {
+func multiply(leftOperands, rightOperands, results []float32) {
 	simd.MulFloat32(leftOperands, rightOperands, results)
 }
 
-func ReLU(operands, results []float32) {
+func reLU(operands, results []float32) {
 	n := min(len(operands), len(results))
 	for i := 0; i < n; i++ {
 		if operands[i] > 0 {
@@ -36,7 +36,7 @@ func ReLU(operands, results []float32) {
 	}
 }
 
-func ReLUDerivative(operands, results []float32) {
+func reLUDerivative(operands, results []float32) {
 	n := min(len(operands), len(results))
 	for i := 0; i < n; i++ {
 		if operands[i] > 0 {
@@ -47,7 +47,7 @@ func ReLUDerivative(operands, results []float32) {
 	}
 }
 
-func Softmax(operands, results []float32) {
+func softmax(operands, results []float32) {
 	n := min(len(operands), len(results))
 	x := operands[0]
 	for i := 0; i < n; i++ {
@@ -65,11 +65,11 @@ func Softmax(operands, results []float32) {
 	}
 }
 
-func Subtract(leftOperands, rightOperands, results []float32) {
+func subtract(leftOperands, rightOperands, results []float32) {
 	simd.SubFloat32(leftOperands, rightOperands, results)
 }
 
-func Summation(result []float32) {
+func summation(result []float32) {
 	i := len(result)
 	j := len(result) / 2
 	for j != 0 {

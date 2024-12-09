@@ -2,9 +2,6 @@ package snn
 
 import (
 	"math/rand"
-
-	"github.com/pehringer/gobed/internal/mat"
-	"github.com/pehringer/gobed/internal/vec"
 )
 
 type (
@@ -112,9 +109,11 @@ func (p parameters) newGradients() gradients {
 
 // Activation Formula:
 //
-//	   n
+//	n
+//
 // z_j = sigma(w_ij * a_i) + b_j
-//	  i=0
+//
+//	i=0
 //
 // a_j = f(z_j)
 //
@@ -133,19 +132,19 @@ func (p parameters) newGradients() gradients {
 // f  Activation function (ReLU or Softmax)
 func (c cache) computeActivations(p parameters, x []float32, a activations) {
 	for i := 0; i < p.h; i++ {
-		vec.Multiply(x, p.hw[i], c.x)
-		vec.Summation(c.x)
+		multiply(x, p.hw[i], c.x)
+		summation(c.x)
 		a.hz[i] = c.x[0]
 	}
-	vec.Add(a.hz, p.hb, a.hz)
-	vec.ReLU(a.hz, a.ha)
+	add(a.hz, p.hb, a.hz)
+	reLU(a.hz, a.ha)
 	for i := 0; i < p.y; i++ {
-		vec.Multiply(a.ha, p.yw[i], c.h)
-		vec.Summation(c.h)
+		multiply(a.ha, p.yw[i], c.h)
+		summation(c.h)
 		a.yz[i] = c.h[0]
 	}
-	vec.Add(a.yz, p.yb, a.yz)
-	vec.Softmax(a.yz, a.ya)
+	add(a.yz, p.yb, a.yz)
+	softmax(a.yz, a.ya)
 }
 
 // Output Layer Delta Formula:
@@ -162,9 +161,11 @@ func (c cache) computeActivations(p parameters, x []float32, a activations) {
 //
 // Hidden layer Delta Formula:
 //
-//	   n
+//	n
+//
 // d_i = sigma(w_ij  * d_j) * f'(z_i)
-//	  j=0
+//
+//	j=0
 //
 // Where:
 //
@@ -178,15 +179,15 @@ func (c cache) computeActivations(p parameters, x []float32, a activations) {
 //
 // z_i  Sum of the i-th neurons in the current layer.
 func (c cache) computeDeltas(p parameters, a activations, t []float32, d deltas) {
-	vec.Subtract(a.ya, t, d.yd)
-	vec.ReLUDerivative(a.hz, d.hd)
+	subtract(a.ya, t, d.yd)
+	reLUDerivative(a.hz, d.hd)
 	for i := 0; i < p.h; i++ {
-		mat.Column(p.yw, i, c.y)
-		vec.Multiply(c.y, d.yd, c.y)
-		vec.Summation(c.y)
+		column(p.yw, i, c.y)
+		multiply(c.y, d.yd, c.y)
+		summation(c.y)
 		c.h[i] = c.y[0]
 	}
-	vec.Multiply(d.hd, c.h, d.hd)
+	multiply(d.hd, c.h, d.hd)
 }
 
 // Bias Gradient Formula:
@@ -213,40 +214,40 @@ func (c cache) computeDeltas(p parameters, a activations, t []float32, d deltas)
 func (c cache) computeGradients(p parameters, x []float32, a activations, d deltas, g gradients) {
 	copy(g.hgb, d.hd)
 	for i := 0; i < p.h; i++ {
-		vec.Duplicate(d.hd[i], c.x)
-		vec.Multiply(x, c.x, g.hgw[i])
+		duplicate(d.hd[i], c.x)
+		multiply(x, c.x, g.hgw[i])
 	}
 	copy(g.ygb, d.yd)
 	for i := 0; i < p.y; i++ {
-		vec.Duplicate(d.yd[i], c.h)
-		vec.Multiply(a.ha, c.h, g.ygw[i])
+		duplicate(d.yd[i], c.h)
+		multiply(a.ha, c.h, g.ygw[i])
 	}
 }
 
 func (c cache) averageGradients(p parameters, g []gradients) {
 	for i := 1; i < len(g); i++ {
-		vec.Add(g[0].hgb, g[i].hgb, g[0].hgb)
+		add(g[0].hgb, g[i].hgb, g[0].hgb)
 	}
-	vec.Duplicate(float32(len(g)), c.h)
-	vec.Divide(g[0].hgb, c.h, g[0].hgb)
+	duplicate(float32(len(g)), c.h)
+	divide(g[0].hgb, c.h, g[0].hgb)
 	for i := 0; i < p.h; i++ {
 		for j := 1; j < len(g); j++ {
-			vec.Add(g[0].hgw[i], g[j].hgw[i], g[0].hgw[i])
+			add(g[0].hgw[i], g[j].hgw[i], g[0].hgw[i])
 		}
-		vec.Duplicate(float32(len(g)), c.x)
-		vec.Divide(g[0].hgw[i], c.x, g[0].hgw[i])
+		duplicate(float32(len(g)), c.x)
+		divide(g[0].hgw[i], c.x, g[0].hgw[i])
 	}
 	for i := 1; i < len(g); i++ {
-		vec.Add(g[0].ygb, g[i].ygb, g[0].ygb)
+		add(g[0].ygb, g[i].ygb, g[0].ygb)
 	}
-	vec.Duplicate(float32(len(g)), c.y)
-	vec.Divide(g[0].ygb, c.y, g[0].ygb)
+	duplicate(float32(len(g)), c.y)
+	divide(g[0].ygb, c.y, g[0].ygb)
 	for i := 0; i < p.y; i++ {
 		for j := 1; j < len(g); j++ {
-			vec.Add(g[0].ygw[i], g[j].ygw[i], g[0].ygw[i])
+			add(g[0].ygw[i], g[j].ygw[i], g[0].ygw[i])
 		}
-		vec.Duplicate(float32(len(g)), c.h)
-		vec.Divide(g[0].ygw[i], c.h, g[0].ygw[i])
+		duplicate(float32(len(g)), c.h)
+		divide(g[0].ygw[i], c.h, g[0].ygw[i])
 	}
 }
 
@@ -262,12 +263,12 @@ func (c cache) averageGradients(p parameters, g []gradients) {
 //
 // g_i Bias gradient of the i-th neuron in the current layer.
 func (c cache) updateBiases(g gradients, lr float32, p parameters) {
-	vec.Duplicate(lr, c.h)
-	vec.Multiply(c.h, g.hgb, c.h)
-	vec.Subtract(p.hb, c.h, p.hb)
-	vec.Duplicate(lr, c.y)
-	vec.Multiply(c.y, g.ygb, c.y)
-	vec.Subtract(p.yb, c.y, p.yb)
+	duplicate(lr, c.h)
+	multiply(c.h, g.hgb, c.h)
+	subtract(p.hb, c.h, p.hb)
+	duplicate(lr, c.y)
+	multiply(c.y, g.ygb, c.y)
+	subtract(p.yb, c.y, p.yb)
 }
 
 // Weight Update Formula:
@@ -283,13 +284,13 @@ func (c cache) updateBiases(g gradients, lr float32, p parameters) {
 // g_ij Weight gradient for the i-th neuron in the prior layer to the j-th neuron in the current layer.
 func (c cache) updateWeights(g gradients, lr float32, p parameters) {
 	for i := 0; i < p.h; i++ {
-		vec.Duplicate(lr, c.x)
-		vec.Multiply(c.x, g.hgw[i], c.x)
-		vec.Subtract(p.hw[i], c.x, p.hw[i])
+		duplicate(lr, c.x)
+		multiply(c.x, g.hgw[i], c.x)
+		subtract(p.hw[i], c.x, p.hw[i])
 	}
 	for i := 0; i < p.y; i++ {
-		vec.Duplicate(lr, c.h)
-		vec.Multiply(c.h, g.ygw[i], c.h)
-		vec.Subtract(p.yw[i], c.h, p.yw[i])
+		duplicate(lr, c.h)
+		multiply(c.h, g.ygw[i], c.h)
+		subtract(p.yw[i], c.h, p.yw[i])
 	}
 }

@@ -3,11 +3,12 @@ package main
 import (
 	"fmt"
 
+	"github.com/pehringer/gobed/internal/data"
 	"github.com/pehringer/gobed/internal/snn"
 )
 
 var (
-	or = snn.TrainingSet{
+	or = data.Set{
 		{
 			Features: []float32{0.0, 0.0},
 			Targets:  []float32{0.0, 1.0},
@@ -25,7 +26,7 @@ var (
 			Targets:  []float32{1.0, 0.0},
 		},
 	}
-	nor = snn.TrainingSet{
+	nor = data.Set{
 		{
 			Features: []float32{0.0, 0.0},
 			Targets:  []float32{1.0, 0.0},
@@ -43,7 +44,7 @@ var (
 			Targets:  []float32{0.0, 1.0},
 		},
 	}
-	xor = snn.TrainingSet{
+	xor = data.Set{
 		{
 			Features: []float32{0.0, 0.0},
 			Targets:  []float32{0.0, 1.0},
@@ -61,7 +62,7 @@ var (
 			Targets:  []float32{0.0, 1.0},
 		},
 	}
-	and = snn.TrainingSet{
+	and = data.Set{
 		{
 			Features: []float32{0.0, 0.0},
 			Targets:  []float32{0.0, 1.0},
@@ -79,7 +80,7 @@ var (
 			Targets:  []float32{1.0, 0.0},
 		},
 	}
-	nand = snn.TrainingSet{
+	nand = data.Set{
 		{
 			Features: []float32{0.0, 0.0},
 			Targets:  []float32{1.0, 0.0},
@@ -101,7 +102,7 @@ var (
 
 func main() {
 	ts := nand
-	n := snn.NewNeuralNetwork(2, 4, 2)
+	n := snn.Initialize(2, 4, 2)
 	//n.OnlineTrain(ts, 4096, 0.05)
 	n.BatchTrain(ts, 25000, 3, 0.05)
 	for i := 0; i < len(ts); i++ {
