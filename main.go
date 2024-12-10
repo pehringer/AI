@@ -101,6 +101,11 @@ var (
 )
 
 func main() {
+	fmt.Println("Testing Hot Encodings: 4")
+	for _, vec := range data.HotEncodings(4) {
+		fmt.Println(vec)
+	}
+	fmt.Println("Training Logic Gate:")
 	ts := nand
 	n := snn.Initialize(2, 4, 2)
 	//n.OnlineTrain(ts, 4096, 0.05)
