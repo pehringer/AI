@@ -9,17 +9,17 @@ import (
 
 func HotEncodings(number int) [][]float32 {
 	result := make([][]float32, number)
-	for i := 0; i < number; i++ {
-		result[i] = make([]float32, number)
-		result[i][i] = 1.0
+	for index := 0; index < number; index++ {
+		result[index] = make([]float32, number)
+		result[index][index] = 1.0
 	}
 	return result
 }
 
-func TokenizeText(text *bufio.Reader) (map[string]int, []int) {
+func TokenizeText(text *bufio.Reader) (Tokens, Vocabulary) {
 	counter := 0
-	lookup := map[string]int{}
-	tokens := []int{}
+	tokens := Tokens{}
+	vocab := Vocabulary{}
 	token := strings.Builder{}
 	for {
 		r, _, err := text.ReadRune()
@@ -32,11 +32,11 @@ func TokenizeText(text *bufio.Reader) (map[string]int, []int) {
 			token.WriteRune(unicode.ToLower(r))
 		} else if unicode.IsSpace(r) && token.Len() > 0 {
 			key := token.String()
-			if value, present := lookup[key]; present {
+			if value, present := vocab[key]; present {
 				tokens = append(tokens, value)
 			} else {
 				tokens = append(tokens, counter)
-				lookup[key] = counter
+				vocab[key] = counter
 				counter++
 			}
 			token.Reset()
@@ -45,5 +45,5 @@ func TokenizeText(text *bufio.Reader) (map[string]int, []int) {
 			break
 		}
 	}
-	return lookup, tokens
+	return tokens, vocab
 }

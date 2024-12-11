@@ -31,7 +31,7 @@ func (n NeuralNetwork) OnlineTrain(training data.Set, epochs int, learningRate f
 	a := n.parameters.newActivations()
 	d := n.parameters.newDeltas()
 	g := n.parameters.newGradients()
-	for e := 0; e < epochs; e++ {
+	for epoch := 0; epoch < epochs; epoch++ {
 		for _, sample := range training {
 			c.computeActivations(n.parameters, sample.Features, a)
 			c.computeDeltas(n.parameters, a, sample.Targets, d)
@@ -44,21 +44,21 @@ func (n NeuralNetwork) OnlineTrain(training data.Set, epochs int, learningRate f
 
 func (n NeuralNetwork) BatchTrain(training data.Set, epochs, batchSize int, learningRate float32) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	c := make([]cache, batchSize)
-	for i := range c {
-		c[i] = n.parameters.newCache()
+	batchCaches := make([]cache, batchSize)
+	for index := range batchCaches {
+		batchCaches[index] = n.parameters.newCache()
 	}
-	a := make([]activations, batchSize)
-	for i := range a {
-		a[i] = n.parameters.newActivations()
+	batchActivations := make([]activations, batchSize)
+	for index := range batchActivations {
+		batchActivations[index] = n.parameters.newActivations()
 	}
-	d := make([]deltas, batchSize)
-	for i := range d {
-		d[i] = n.parameters.newDeltas()
+	batchDeltas := make([]deltas, batchSize)
+	for index := range batchDeltas {
+		batchDeltas[index] = n.parameters.newDeltas()
 	}
-	g := make([]gradients, batchSize)
-	for i := range d {
-		g[i] = n.parameters.newGradients()
+	batchGradients := make([]gradients, batchSize)
+	for index := range batchDeltas {
+		batchGradients[index] = n.parameters.newGradients()
 	}
 	sampleIndex := 0
 	batches := len(training) / batchSize
@@ -69,17 +69,17 @@ func (n NeuralNetwork) BatchTrain(training data.Set, epochs, batchSize int, lear
 				samples.Add(1)
 				go func(batchIndex, sampleIndex int) {
 					defer samples.Done()
-					c[batchIndex].computeActivations(n.parameters, training[sampleIndex].Features, a[batchIndex])
-					c[batchIndex].computeDeltas(n.parameters, a[batchIndex], training[sampleIndex].Targets, d[batchIndex])
-					c[batchIndex].computeGradients(n.parameters, training[sampleIndex].Features, a[batchIndex], d[batchIndex], g[batchIndex])
+					batchCaches[batchIndex].computeActivations(n.parameters, training[sampleIndex].Features, batchActivations[batchIndex])
+					batchCaches[batchIndex].computeDeltas(n.parameters, batchActivations[batchIndex], training[sampleIndex].Targets, batchDeltas[batchIndex])
+					batchCaches[batchIndex].computeGradients(n.parameters, training[sampleIndex].Features, batchActivations[batchIndex], batchDeltas[batchIndex], batchGradients[batchIndex])
 				}(batchIndex, sampleIndex)
 				sampleIndex += 1
 				sampleIndex %= len(training)
 			}
 			samples.Wait()
-			c[0].averageGradients(n.parameters, g)
-			c[0].updateBiases(g[0], learningRate, n.parameters)
-			c[0].updateWeights(g[0], learningRate, n.parameters)
+			batchCaches[0].averageGradients(n.parameters, batchGradients)
+			batchCaches[0].updateBiases(batchGradients[0], learningRate, n.parameters)
+			batchCaches[0].updateWeights(batchGradients[0], learningRate, n.parameters)
 		}
 	}
 }

@@ -119,9 +119,9 @@ func main() {
 	
 	**Stay curious.** Learn, explore, grow... and maybe, one day, you’ll touch the stars. ✨`
 	reader := bufio.NewReader(strings.NewReader(text))
-	lookup, tokens := data.TokenizeText(reader)
+	tokens, vocab := data.TokenizeText(reader)
 	lookdown := map[int]string{}
-	for key, value := range lookup {
+	for key, value := range vocab {
 		lookdown[value] = key
 	}
 	for _, token := range tokens {
