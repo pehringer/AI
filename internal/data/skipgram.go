@@ -21,8 +21,7 @@ func Skipgram(text *bufio.Reader, window int) ([]Sample, map[string]int) {
 	for middle := 0; middle < len(tokens); middle++ {
 		start := max(0, middle-window)
 		end := min(len(tokens), middle+window+1)
-		context := []int{}
-		context = append(context, tokens[start:middle]...)
+		context := append([]int{}, tokens[start:middle]...)
 		context = append(context, tokens[middle+1:end]...)
 		target := tokens[middle]
 		samples = appendSkipgrams(samples, encodings, context, target)
