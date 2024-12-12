@@ -20,30 +20,30 @@ func Initialize(inputWidth, hiddenWidth, outputWidth int) NeuralNetwork {
 }
 
 func (n NeuralNetwork) Prediction(features []float32) []float32 {
-	c := n.parameters.newCache()
-	a := n.parameters.newActivations()
-	c.computeActivations(n.parameters, features, a)
-	return a.ya
+	featuresCache := n.parameters.newCache()
+	featuresActivations := n.parameters.newActivations()
+	featuresCache.computeActivations(n.parameters, features, featuresActivations)
+	return featuresActivations.ya
 }
 
-func (n NeuralNetwork) OnlineTrain(training data.Set, epochs int, learningRate float32) {
-	c := n.parameters.newCache()
-	a := n.parameters.newActivations()
-	d := n.parameters.newDeltas()
-	g := n.parameters.newGradients()
+func (n NeuralNetwork) OnlineTrain(training []data.Sample, epochs int, learningRate float32) {
+	sampleCache := n.parameters.newCache()
+	sampleActivations := n.parameters.newActivations()
+	sampleDeltas := n.parameters.newDeltas()
+	sampleGradients := n.parameters.newGradients()
 	for epoch := 0; epoch < epochs; epoch++ {
 		for _, sample := range training {
-			c.computeActivations(n.parameters, sample.Features, a)
-			c.computeDeltas(n.parameters, a, sample.Targets, d)
-			c.computeGradients(n.parameters, sample.Features, a, d, g)
-			c.updateBiases(g, learningRate, n.parameters)
-			c.updateWeights(g, learningRate, n.parameters)
+			sampleCache.computeActivations(n.parameters, sample.Features, sampleActivations)
+			sampleCache.computeDeltas(n.parameters, sampleActivations, sample.Targets, sampleDeltas)
+			sampleCache.computeGradients(n.parameters, sample.Features, sampleActivations, sampleDeltas, sampleGradients)
+			sampleCache.updateBiases(sampleGradients, learningRate, n.parameters)
+			sampleCache.updateWeights(sampleGradients, learningRate, n.parameters)
 		}
 	}
 }
 
-func (n NeuralNetwork) BatchTrain(training data.Set, epochs, batchSize int, learningRate float32) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+func (n NeuralNetwork) BatchTrain(training []data.Sample, epochs, batchSize int, learningRate float32) {
+	runtime.GOMAXPROCS(runtime.NumCPU() - 1)
 	batchCaches := make([]cache, batchSize)
 	for index := range batchCaches {
 		batchCaches[index] = n.parameters.newCache()

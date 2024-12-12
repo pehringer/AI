@@ -16,11 +16,11 @@ func HotEncodings(number int) [][]float32 {
 	return result
 }
 
-func TokenizeText(text *bufio.Reader) (Tokens, Vocabulary) {
+func TokenizeText(text *bufio.Reader) ([]int, map[string]int) {
 	counter := 0
-	tokens := Tokens{}
-	vocab := Vocabulary{}
 	token := strings.Builder{}
+	tokens := []int{}
+	vocabulary := map[string]int{}
 	for {
 		r, _, err := text.ReadRune()
 		if err == io.EOF {
@@ -31,12 +31,12 @@ func TokenizeText(text *bufio.Reader) (Tokens, Vocabulary) {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			token.WriteRune(unicode.ToLower(r))
 		} else if unicode.IsSpace(r) && token.Len() > 0 {
-			key := token.String()
-			if value, present := vocab[key]; present {
+			word := token.String()
+			if value, present := vocabulary[word]; present {
 				tokens = append(tokens, value)
 			} else {
 				tokens = append(tokens, counter)
-				vocab[key] = counter
+				vocabulary[word] = counter
 				counter++
 			}
 			token.Reset()
@@ -45,5 +45,14 @@ func TokenizeText(text *bufio.Reader) (Tokens, Vocabulary) {
 			break
 		}
 	}
-	return tokens, vocab
+	return tokens, vocabulary
+}
+
+func GetLabels(vocabulary map[string]int) []string {
+	labels := make([]string, len(vocabulary))
+	for word, index := range vocabulary {
+		copy := word
+		labels[index] = copy
+	}
+	return labels
 }
