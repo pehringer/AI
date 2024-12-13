@@ -7,7 +7,7 @@ import (
 	"unicode"
 )
 
-func HotEncodings(number int) [][]float32 {
+func hotEncodings(number int) [][]float32 {
 	result := make([][]float32, number)
 	for index := 0; index < number; index++ {
 		result[index] = make([]float32, number)
@@ -16,7 +16,7 @@ func HotEncodings(number int) [][]float32 {
 	return result
 }
 
-func TokenizeText(text *bufio.Reader) ([]int, map[string]int) {
+func tokenizeText(text *bufio.Reader) ([]int, map[string]int) {
 	counter := 0
 	token := strings.Builder{}
 	tokens := []int{}

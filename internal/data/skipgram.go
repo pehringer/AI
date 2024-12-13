@@ -15,8 +15,8 @@ func appendSkipgrams(s []Sample, encodings [][]float32, context []int, target in
 }
 
 func Skipgram(text *bufio.Reader, window int) ([]Sample, map[string]int) {
-	tokens, vocabulary := TokenizeText(text)
-	encodings := HotEncodings(len(vocabulary))
+	tokens, vocabulary := tokenizeText(text)
+	encodings := hotEncodings(len(vocabulary))
 	samples := []Sample{}
 	for middle := 0; middle < len(tokens); middle++ {
 		start := max(0, middle-window)
