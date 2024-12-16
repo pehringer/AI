@@ -21,5 +21,5 @@ func main() {
 
 	trainingSamples, vocabulary := data.Cbow(reader, 3)
 	network := snn.Initialize(len(vocabulary), 24, len(vocabulary))
-	network.BatchTrain(trainingSamples, 300, 12, 0.05)
+	network.BatchTrain(trainingSamples, 1, 12, 0.05)
 }

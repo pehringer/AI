@@ -2,7 +2,6 @@ package data
 
 import (
 	"bufio"
-	"io"
 	"strings"
 	"unicode"
 )
@@ -16,34 +15,30 @@ func hotEncodings(number int) [][]float32 {
 	return result
 }
 
+func nextWord(text *bufio.Reader) string {
+	word := strings.Builder{}
+	for {
+		if r, _, err := text.ReadRune(); err != nil {
+			break
+		} else if unicode.IsSpace(r) && word.Len() > 0 {
+			break
+		} else if unicode.IsLetter(r) {
+			word.WriteRune(unicode.ToLower(r))
+		}
+	}
+	return word.String()
+}
+
 func tokenizeText(text *bufio.Reader) ([]int, map[string]int) {
 	counter := 0
-	token := strings.Builder{}
 	tokens := []int{}
 	vocabulary := map[string]int{}
-	for {
-		r, _, err := text.ReadRune()
-		if err == io.EOF {
-			r = ' '
-		} else if err != nil {
-			break
+	for word := nextWord(text); word != ""; word = nextWord(text) {
+		if _, present := vocabulary[word]; !present {
+			vocabulary[word] = counter
+			counter++
 		}
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			token.WriteRune(unicode.ToLower(r))
-		} else if unicode.IsSpace(r) && token.Len() > 0 {
-			word := token.String()
-			if value, present := vocabulary[word]; present {
-				tokens = append(tokens, value)
-			} else {
-				tokens = append(tokens, counter)
-				vocabulary[word] = counter
-				counter++
-			}
-			token.Reset()
-		}
-		if err != nil {
-			break
-		}
+		tokens = append(tokens, vocabulary[word])
 	}
 	return tokens, vocabulary
 }
