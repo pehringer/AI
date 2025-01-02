@@ -8,9 +8,9 @@
 3) Run a AI model in a docker container:
   - 1.3 GB ```make start_llama3_2_1b```
   - 2.0 GB ```make start_llama3_2_3b```
-  - 3.8 GB ```start_codellama_7b```
-  - 7.4 GB ```start_codellama_13b```
-  - 19 GB ```start_codellama_34b```
+  - 3.8 GB ```make start_codellama_7b```
+  - 7.4 GB ```make start_codellama_13b```
+  - 19 GB ```make start_codellama_34b```
 4) Stop and cleanup docker container ```make stop```
 5) Stop docker ```sudo systemctl stop docker```
 
